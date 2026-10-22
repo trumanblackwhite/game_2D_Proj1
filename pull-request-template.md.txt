@@ -1,0 +1,11 @@
+<!-- .github/pull_request_template.md -->
+## Apa yang diubah
+membuat world map dan memasukan asset game ke unity
+## Cara menguji
+1. Buka scene ...
+2. Tekan Play, lalu ...
+## Checklist
+- [sudah] Sudah Update from main
+- [sudah] Console tanpa error
+- [sudah] File .meta ikut ter-commit
+- [sudah] Tidak mengubah scene milik orang lain
