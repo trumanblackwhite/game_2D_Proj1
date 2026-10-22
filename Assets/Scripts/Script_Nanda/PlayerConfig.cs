@@ -1,16 +1,10 @@
 using UnityEngine;
-
-public class PlayerConfig : MonoBehaviour
+[CreateAssetMenu(fileName = "Cfg_Player",
+        menuName = "Pulau Monster/Player Config")]
+public class PlayerConfig : ScriptableObject
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+    [SerializeField] private float walkSpeed = 3.75f;
+    [SerializeField] private float runSpeed = 6f;
+    public float WalkSpeed => walkSpeed;
+    public float RunSpeed => runSpeed;
 }
