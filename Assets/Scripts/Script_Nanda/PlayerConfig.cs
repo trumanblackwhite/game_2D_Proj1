@@ -1,5 +1,4 @@
 using UnityEngine;
-
 [CreateAssetMenu(fileName = "Cfg_Player",
         menuName = "Pulau Monster/Player Config")]
 public class PlayerConfig : ScriptableObject
