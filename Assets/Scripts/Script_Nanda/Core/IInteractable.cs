@@ -1,4 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public interface IInteractable { void interact(PlayerInteractor who); }
+public interface IInteractable
+{
+    void Interact(PlayerInteractor who);
+}

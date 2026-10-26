@@ -18,6 +18,6 @@ public class PlayerInteractor : MonoBehaviour
         if (input == null || !input.InteractPressed) return;
 
         Collider2D hit = Physics2D.OverlapCircle(ProbePoint, radius, interactableMask);
-        if (hit != null && hit.TryGetComponent(out IInteractable target)) target.interact(this);        
+        if (hit != null && hit.TryGetComponent(out IInteractable target)) target.Interact(this);        
     }
 }

@@ -43302,7 +43302,7 @@ MonoBehaviour:
   radius: 0.3
   interactableMask:
     serializedVersion: 2
-    m_Bits: 1
+    m_Bits: 1024
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
