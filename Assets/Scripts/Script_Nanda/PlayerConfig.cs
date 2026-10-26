@@ -1,6 +1,6 @@
 using UnityEngine;
-[CreateAssetMenu(fileName = "Cfg_Player",
-        menuName = "Pulau Monster/Player Config")]
+
+[CreateAssetMenu(fileName = "Cfg_Player", menuName = "Pulau Monster/Player Config")]
 public class PlayerConfig : ScriptableObject
 {
     [SerializeField] private float walkSpeed = 3.75f;
