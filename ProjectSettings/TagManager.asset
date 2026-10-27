@@ -16,8 +16,8 @@ TagManager:
   - Blocking
   - TallGrass
   - Player
-  - InteractableMask
-  - 
+  - Interactable
+  - CameraBounds
   - 
   - 
   - 

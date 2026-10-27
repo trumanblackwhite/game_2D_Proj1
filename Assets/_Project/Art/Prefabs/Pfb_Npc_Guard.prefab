@@ -50,8 +50,12 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4274882811471831025, guid: 3ac3763281ba9dc4d8ccde68155286e5, type: 3}
       propertyPath: m_Name
-      value: Pfb_Npc_Girl
+      value: Pfb_Npc_Guard
       objectReference: {fileID: 0}
+    - target: {fileID: 6963935631346492825, guid: 3ac3763281ba9dc4d8ccde68155286e5, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: -2558671177114619053, guid: e97cb9b6d414f7c4590eded1ade01155, type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
