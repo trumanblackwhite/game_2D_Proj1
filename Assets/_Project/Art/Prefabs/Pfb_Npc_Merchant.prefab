@@ -50,8 +50,20 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3504694132354860472, guid: 2d312bd12ad6c5244bb224477eed0f28, type: 3}
       propertyPath: m_Name
-      value: Pfb_Npc_Girl Variant
+      value: Pfb_Npc_Merchant
       objectReference: {fileID: 0}
+    - target: {fileID: 6483071039584345582, guid: 2d312bd12ad6c5244bb224477eed0f28, type: 3}
+      propertyPath: m_SpriteTilingProperty.oldSize.x
+      value: 0.14
+      objectReference: {fileID: 0}
+    - target: {fileID: 6483071039584345582, guid: 2d312bd12ad6c5244bb224477eed0f28, type: 3}
+      propertyPath: m_SpriteTilingProperty.oldSize.y
+      value: 0.17
+      objectReference: {fileID: 0}
+    - target: {fileID: 7733979587118120912, guid: 2d312bd12ad6c5244bb224477eed0f28, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 2700042031433159083, guid: a87afd865bdc1f24ca80517e01d7f0ee, type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

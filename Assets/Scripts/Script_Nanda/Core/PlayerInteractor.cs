@@ -7,6 +7,7 @@ public class PlayerInteractor : MonoBehaviour
     [SerializeField] private float reach = 0.6f;
     [SerializeField] private float radius = 0.3f;
     [SerializeField] private LayerMask interactableMask;
+    
     private IActionInput input;
 
     public void Construct(IActionInput actionInput) => input = actionInput;         
@@ -18,6 +19,14 @@ public class PlayerInteractor : MonoBehaviour
         if (input == null || !input.InteractPressed) return;
 
         Collider2D hit = Physics2D.OverlapCircle(ProbePoint, radius, interactableMask);
-        if (hit != null && hit.TryGetComponent(out IInteractable target)) target.Interact(this);        
+        if (hit != null && hit.TryGetComponent(out IInteractable target))
+        {
+            target.Interact(this);
+            Debug.Log($"[Interactor] KENA: {hit.name}");
+        }
+        else
+        {
+             Debug.Log($"[Interactor] MELESET: probe={ProbePoint} facing={movement.Facing} mask={interactableMask.value}");
+        }
     }
 }
