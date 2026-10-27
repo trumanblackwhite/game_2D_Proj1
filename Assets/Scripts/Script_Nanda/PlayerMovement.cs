@@ -1,30 +1,40 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 public class PlayerMovement : MonoBehaviour
 {
-    [SerializeField] private float moveSpeed = 3.75f;
-    
-    private InputAction moveAction;
-    private Vector2 moveInput;
-    private Rigidbody2D rb;
+    [SerializeField] private Cfg_Player config;
+    [SerializeField] private Rigidbody2D rb;
+    private IMoveInput input;
+    private Vector2 velocity;
 
-    void Start()
-    {
-        // Mencari action "Move" dari Input System bawaan
-        moveAction = InputSystem.actions.FindAction("Move");
-        rb = GetComponent<Rigidbody2D>();
-    }
+    // Property yang dibaca oleh PlayerAnimator
+    public Vector2 Velocity => velocity;
+    public Vector2 Facing { get; private set; } = Vector2.down;
+
+    public void Construct(IMoveInput moveInput) => input = moveInput;
 
     void Update()
     {
-        // Membaca Keyboard
-        moveInput = moveAction.ReadValue<Vector2>();
+        if (input == null) return;
+
+        Vector2 move = input.Move;
+        float speed = input.IsRunning ? config.RunSpeed : config.WalkSpeed;
+
+        velocity = move * speed;
+
+        // Mengubah arah hadap menjadi 4 arah mata angin
+        if (move.sqrMagnitude > 0.01f)
+            Facing = ToCardinal(move);
     }
 
     void FixedUpdate()
     {
-        // Menggerakkan posisi karakter berdasarkan input
-        rb.linearVelocity = new Vector2(moveInput.x * moveSpeed, moveInput.y * moveSpeed);
+        if (rb != null)
+            rb.linearVelocity = velocity;
     }
+
+    private static Vector2 ToCardinal(Vector2 v) =>
+        Mathf.Abs(v.x) > Mathf.Abs(v.y)
+            ? new Vector2(Mathf.Sign(v.x), 0f)
+            : new Vector2(0f, Mathf.Sign(v.y));
 }
