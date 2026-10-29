@@ -22,11 +22,6 @@ public class PlayerInteractor : MonoBehaviour
         if (hit != null && hit.TryGetComponent(out IInteractable target))
         {
             target.Interact(this);
-            Debug.Log($"[Interactor] KENA: {hit.name}");
-        }
-        else
-        {
-             Debug.Log($"[Interactor] MELESET: probe={ProbePoint} facing={movement.Facing} mask={interactableMask.value}");
         }
     }
 }
