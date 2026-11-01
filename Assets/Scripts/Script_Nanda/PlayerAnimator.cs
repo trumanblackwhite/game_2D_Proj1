@@ -1,16 +1,18 @@
 using UnityEngine;
 
-public class PlayerAnimators : MonoBehaviour
+[RequireComponent(typeof(Animator))]
+public class PlayerAnimator : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
+    private static readonly int MoveX = Animator.StringToHash("MoveX");
+    private static readonly int MoveY = Animator.StringToHash("MoveY");
+    private static readonly int IsMoving = Animator.StringToHash("IsMoving");
+    [SerializeField] private PlayerMovement movement;
+    private Animator animator;
+    void Awake() => animator = GetComponent<Animator>();
     void Update()
     {
-        
+        animator.SetBool(IsMoving, movement.Velocity.sqrMagnitude > 0.01f);
+        animator.SetFloat(MoveX, movement.Facing.x);
+        animator.SetFloat(MoveY, movement.Facing.y);
     }
 }
