@@ -1,30 +1,35 @@
-using System.Collections;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 public class GameBootstrap : MonoBehaviour
 {
     [SerializeField] private string firstScene = "Scn_World";
-    private IMoveInput moveInput;
-    private IActionInput actionInput;
+    [SerializeField] private MonsterDatabase monsterDatabase;
+    [SerializeField] private ScreenFader fader;
+    
+    private GameServices services;
 
     void Awake()
     {
-        moveInput = new InputSystemMoveInput();
-        actionInput = new InputSystemActionInput();
+        // PENTING: Agar GameBootstrap tidak hancur saat pindah ke Scn_World
+        DontDestroyOnLoad(gameObject);
+
+        // InputGate sekarang tidak butuh parameter lagi
+        // Di dalam method Awake():
+        var gate = new InputGate(new InputSystemMoveInput(), new InputSystemActionInput());
+        
+        services = new GameServices
+        {
+            Input = gate, 
+            Database = monsterDatabase,
+            Party = new PlayerParty(),
+            Battle = new BattleSession(),
+        };
+
+        services.Scenes = new SceneFlow(this, fader, services);
     }
 
-    IEnumerator Start()
+    void Start()
     {
-        yield return SceneManager.LoadSceneAsync(firstScene, LoadSceneMode.Additive);
-        SceneManager.SetActiveScene(SceneManager.GetSceneByName(firstScene));
-
-        var installer = FindFirstObjectByType<WorldInstaller>();
-        if (installer == null)
-        {
-            Debug.LogError("WorldInstaller tidak ditemukan setelah memuat scene.");
-            yield break;
-        }
-        installer.Install(moveInput, actionInput);
+        services.Scenes.GoTo(firstScene);
     }
 }
