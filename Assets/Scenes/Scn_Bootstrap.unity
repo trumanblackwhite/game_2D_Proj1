@@ -149,6 +149,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameBootstrap
   firstScene: Scn_World
+  monsterDatabase: {fileID: 0}
+  fader: {fileID: 0}
 --- !u!4 &1768176426
 Transform:
   m_ObjectHideFlags: 0

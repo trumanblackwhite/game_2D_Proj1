@@ -1,13 +1,7 @@
 fileFormatVersion: 2
 guid: ace24c89432ea0541bace23917d08eae
 TextureImporter:
-  internalIDToNameTable:
-  - first:
-      213: -82409557241251320
-    second: Aqua_2_Finnox_24x24_0
-  - first:
-      213: 577759283797168821
-    second: Aqua_2_Finnox_24x24_1
+  internalIDToNameTable: []
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -40,7 +34,7 @@ TextureImporter:
   maxTextureSize: 2048
   textureSettings:
     serializedVersion: 2
-    filterMode: 1
+    filterMode: 0
     aniso: 1
     mipBias: 0
     wrapU: 1
@@ -54,7 +48,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 100
+  spritePixelsToUnits: 16
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -78,7 +72,7 @@ TextureImporter:
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
-    textureCompression: 1
+    textureCompression: 0
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -108,18 +102,18 @@ TextureImporter:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 72
+        width: 24
         height: 24
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 80ab98eb1f83bdef0800000000000000
-      internalID: -82409557241251320
+      spriteID: 93c9946ed127f1547805e7770ea47d1b
+      internalID: -205540237
       vertices: []
       indices: 
       edges: []
@@ -128,20 +122,64 @@ TextureImporter:
       name: Aqua_2_Finnox_24x24_1
       rect:
         serializedVersion: 2
-        x: 71
+        x: 24
         y: 0
-        width: 25
+        width: 24
         height: 24
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 5b21a6ce10d940800800000000000000
-      internalID: 577759283797168821
+      spriteID: 60b8699c1381f654ab8e58ef38989cf2
+      internalID: -1623284554
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Aqua_2_Finnox_24x24_2
+      rect:
+        serializedVersion: 2
+        x: 48
+        y: 0
+        width: 24
+        height: 24
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6093bd6cd37139c449c3128ba55964bf
+      internalID: 1495435325
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Aqua_2_Finnox_24x24_3
+      rect:
+        serializedVersion: 2
+        x: 72
+        y: 0
+        width: 24
+        height: 24
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 92e1443cc828ebe4b8e05394bc7b63ae
+      internalID: 1630227517
       vertices: []
       indices: 
       edges: []
@@ -150,7 +188,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: 73f626acecb6b5b4d86bee8d5a68221b
     internalID: 0
     vertices: []
     indices: 
@@ -158,10 +196,14 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     spriteCustomMetadata:
-      entries: []
+      entries:
+      - key: SpriteEditor.SliceSettings
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":24.0,"y":24.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":1,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
-      Aqua_2_Finnox_24x24_0: -82409557241251320
-      Aqua_2_Finnox_24x24_1: 577759283797168821
+      Aqua_2_Finnox_24x24_0: -205540237
+      Aqua_2_Finnox_24x24_1: -1623284554
+      Aqua_2_Finnox_24x24_2: 1495435325
+      Aqua_2_Finnox_24x24_3: 1630227517
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
