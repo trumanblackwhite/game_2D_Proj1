@@ -15,6 +15,7 @@ public class PlayerMovement : MonoBehaviour
         float speed = input.IsRunning ? config.RunSpeed :
                 config.WalkSpeed;
         velocity = input.Move * speed;
+        if (velocity != Vector2.zero) Facing = ToCardinal(velocity);
     }
     void FixedUpdate() => rb.linearVelocity = velocity;
 
