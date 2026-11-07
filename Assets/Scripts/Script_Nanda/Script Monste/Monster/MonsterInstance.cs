@@ -36,6 +36,12 @@ public class MonsterInstance : IDamageable
         Changed?.Invoke();
     }
 
+    public void Heal(int amount)
+    {   
+        CurrentHP = Mathf.Min(MaxHP, CurrentHP + amount);
+        Changed?.Invoke();
+    }
+
     // Gain EXP, cek level up dan evolusi
     public void GainExp(int amount)
     {
