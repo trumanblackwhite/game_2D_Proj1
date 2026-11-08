@@ -28,7 +28,7 @@ public class BattleView : MonoBehaviour
     
     private BattleSession session;
     private MonsterInstance partner;
-    private Coroutine typingCoroutine;
+     private Coroutine typing;
 
     public void Construct(BattleSession s, MonsterInstance partnerMon, MonsterInstance enemyMon)
     {
@@ -130,19 +130,24 @@ public class BattleView : MonoBehaviour
         typingCoroutine = StartCoroutine(TypeText(text));
     }
 
-    private IEnumerator TypeText(string text)
+    public void Say(string line) => messageText.text = line;
+    public void ShowMessage(string text)
+    {
+        hintText.enabled = false;
+        if (typing != null) StopCoroutine(typing);
+        typing = StartCoroutine(Type(text));
+    }
+
+    private System.Collections.IEnumerator Type(string text)
     {
         messageText.text = "";
-        float delay = 1f / 55f; // 55 karakter per detik
-
+        float delay = 1f / 55f; // Kecepatan 55 huruf/detik (sesuai modul Slide 30)
         foreach (char c in text)
         {
             messageText.text += c;
             yield return new WaitForSeconds(delay);
         }
     }
-
-    // ✅ MENAMPILKAN MENU (P5 Slide 31)
     public void ShowMenu()
     {
         if (partner == null) return;

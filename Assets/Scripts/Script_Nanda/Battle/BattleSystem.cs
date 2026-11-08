@@ -65,6 +65,9 @@ public class BattleSystem : MonoBehaviour
 
     IEnumerator Routine()
     {
+        partner.Heal(partner.MaxHP);
+        enemy.Heal(enemy.MaxHP);
+
         Busy = true;
         yield return Say($"{enemy.Data.DisplayName} liar muncul! (Lv {enemy.Level})", 0.9f);
 
