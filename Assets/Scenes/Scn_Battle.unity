@@ -1729,7 +1729,7 @@ RectTransform:
   m_AnchoredPosition: {x: 61.2, y: -51.890625}
   m_SizeDelta: {x: 300, y: 40}
   m_Pivot: {x: 0.1, y: 0.1}
---- !u!114 &1479076197
+--- !u!114 &1433176947
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1852,7 +1852,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1479076196}
   - component: {fileID: 1479076198}
-  - component: {fileID: 1479076197}
+  - component: {fileID: 1433176947}
   - component: {fileID: 1479076199}
   m_Layer: 5
   m_Name: NameText
