@@ -1,12 +1,17 @@
+using System.Collections;
 using UnityEngine;
 
 public class SkillAction : BattleAction
 {
-    public override void Execute(BattleSession session, MonsterInstance user, MonsterInstance target)
+    public override IEnumerator Execute(BattleSystem battle, MonsterInstance user, MonsterInstance target)
     {
-        float power = 14f;    // sementara; cek MonsterData bila ada field power skill
+        yield return battle.Say($"{user.Data.DisplayName} menggunakan {user.Data.SkillName}!", 0.7f);
+        yield return new WaitForSeconds(0.2f);
+        
+        float power = 14f;
         int dmg = DamageFormula.Calculate(user, target, power);
         target.TakeDamage(dmg);
-        Debug.Log($"{user.Data.DisplayName} menggunakan {user.Data.SkillName}! Damage: {dmg}");
+        
+        yield return new WaitForSeconds(0.45f);
     }
 }
