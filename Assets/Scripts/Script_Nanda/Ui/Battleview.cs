@@ -13,6 +13,7 @@ public class BattleView : MonoBehaviour
     public event Action<int> Chosen;
     private BattleSession session;
     private MonsterInstance partner;
+     private Coroutine typing;
 
     public void Construct(BattleSession s, MonsterInstance partnerMon, MonsterInstance enemyMon)
     {
@@ -27,7 +28,23 @@ public class BattleView : MonoBehaviour
     }
 
     public void Say(string line) => messageText.text = line;
+    public void ShowMessage(string text)
+    {
+        hintText.enabled = false;
+        if (typing != null) StopCoroutine(typing);
+        typing = StartCoroutine(Type(text));
+    }
 
+    private System.Collections.IEnumerator Type(string text)
+    {
+        messageText.text = "";
+        float delay = 1f / 55f; // Kecepatan 55 huruf/detik (sesuai modul Slide 30)
+        foreach (char c in text)
+        {
+            messageText.text += c;
+            yield return new WaitForSeconds(delay);
+        }
+    }
     public void ShowMenu()
     {
         messageText.text = $"Apa yang akan {partner.Data.DisplayName} lakukan?";

@@ -10,7 +10,9 @@ public class BattlePresenter : MonoBehaviour
         battle = b;
         view = v;
         v.Construct(s.Battle, s.Party.Partner, s.Battle.Enemy);
-        b.Said += v.Say;
+        
+        b.Said += v.Say; 
+        
         b.ChoiceRequested += _ => v.ShowMenu();
         v.Chosen += i => { v.HideMenu(); b.Choose(i); };
     }
