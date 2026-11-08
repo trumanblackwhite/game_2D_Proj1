@@ -44,5 +44,8 @@ TagManager:
   - name: Character
     uniqueID: 893024247
     locked: 0
+  - name: Monster
+    uniqueID: 2023249901
+    locked: 0
   m_RenderingLayers:
   - Default
