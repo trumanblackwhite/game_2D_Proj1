@@ -99,6 +99,7 @@ public class WildMonster : MonoBehaviour
         }
         else
         {
+            if (fsm != null)
             fsm.Tick(Time.deltaTime);
         }
 

@@ -19,8 +19,8 @@ public class BattleSystem : MonoBehaviour
 
     public bool Busy { get; private set; }
 
-    public event System.Action<string> Said;          // P5-5: BattleView mendengarkan
-    public event System.Action<int> ChoiceRequested;  // P5-5: presenter membuka menu
+    public event System.Action<string> Said;
+    public event System.Action<int> ChoiceRequested;
 
     public void Construct(GameServices s)
     {
@@ -35,7 +35,7 @@ public class BattleSystem : MonoBehaviour
 
     private void Say(string line)
     {
-        Debug.Log($"[Battle] {line}");
+        Debug.Log($"[Battle] SAY: {line}");
         Said?.Invoke(line);
     }
 
@@ -49,6 +49,9 @@ public class BattleSystem : MonoBehaviour
 
     IEnumerator Routine()
     {
+        partner.Heal(partner.MaxHP);
+        enemy.Heal(enemy.MaxHP);
+
         Busy = true;
         Say($"{enemy.Data.DisplayName} liar muncul! (Lv {enemy.Level})");
         yield return new WaitForSeconds(0.8f);
@@ -76,16 +79,33 @@ public class BattleSystem : MonoBehaviour
         Say("Pilih aksi: 1=Serang 2=Jurus 3=Ramuan 4=Kabur");
         ChoiceRequested?.Invoke(0);
         pendingChoice = -1;
-        while (pendingChoice < 0) yield return null;   // menunggu pilihan (debug / presenter)
+        while (pendingChoice < 0) yield return null;
 
         switch (pendingChoice)
         {
-            case 0: attack.Execute(session, partner, enemy); break;
-            case 1: skill.Execute(session, partner, enemy); break;
-            case 2: item.Execute(session, partner, enemy); break;
-            case 3: escape.Execute(session, partner, enemy); break;
+            case 0: // Serang
+                Say($"{partner.Data.DisplayName} menyerang!");
+                attack.Execute(session, partner, enemy);
+                break;
+
+            case 1: // Jurus
+                string skillName = partner.Data.SkillName ?? "Semburan Api";
+                Say($"{partner.Data.DisplayName} memakai {skillName}!");
+                skill.Execute(session, partner, enemy);
+                break;
+
+            case 2: // Ramuan
+                Say($"{partner.Data.DisplayName} menggunakan Ramuan!");
+                item.Execute(session, partner, enemy);
+                break;
+
+            case 3: // Kabur
+                Say($"{partner.Data.DisplayName} mencoba kabur!");
+                escape.Execute(session, partner, enemy);
+                break;
         }
 
+        yield return new WaitForSeconds(0.8f);
         if (session.Escaped) EndBattle(BattleResult.Escape);
         else Report();
 
@@ -95,7 +115,12 @@ public class BattleSystem : MonoBehaviour
     IEnumerator EnemyTurn()
     {
         if (enemy.CurrentHP <= 0) yield break;
-        attack.Execute(session, enemy, partner);   // AI sementara: selalu serangan biasa
+
+        // Pesan sesuai modul Slide 34-35: "Lawan" diawali kecuali boss
+        string who = (!session.IsBoss ? "Lawan " : "") + enemy.Data.DisplayName;
+        Say($"{who} menyerang!");
+
+        attack.Execute(session, enemy, partner);
         Report();
         yield return new WaitForSeconds(0.6f);
     }
