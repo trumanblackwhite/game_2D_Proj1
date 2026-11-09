@@ -1,10 +1,17 @@
+using System.Collections;
 using UnityEngine;
 
 public class EscapeAction : BattleAction
 {
-    public override void Execute(BattleSession session, MonsterInstance user, MonsterInstance target)
+    public override IEnumerator Execute(BattleSystem battle, MonsterInstance user, MonsterInstance target)
     {
-        Debug.Log("Mencoba kabur dari battle!");
-        session.TryEscape(); // Memanggil logika kabur di BattleSession
+        // 1. Tampilkan pesan
+        yield return battle.Say($"{user.Data.DisplayName} mencoba kabur...", 0.7f);
+
+        // 2. Jeda sebentar
+        yield return new WaitForSeconds(0.5f);
+
+        // 3. Eksekusi logika kabur (akses via property public Session)
+        battle.Session.TryEscape();
     }
 }

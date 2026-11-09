@@ -1,5 +1,17 @@
 using UnityEngine;
 using System;
+using System.Collections.Generic;
+
+// ✅ 1. Tambahkan Enum dan Struct ini (Wajib ada di file ini)
+public enum GrowthType { LevelUp, Evolve }
+
+public struct GrowthEvent
+{
+    public GrowthType Type;
+    public string Message;
+    public MonsterData From;
+    public MonsterData To;
+}
 
 public class MonsterInstance : IDamageable
 {
@@ -36,14 +48,17 @@ public class MonsterInstance : IDamageable
         Changed?.Invoke();
     }
 
-    public void Heal(int amount)
-    {   
+    // ✅ 2. PERBAIKAN: Heal mengembalikan int (jumlah HP yang naik) sesuai P5 Slide 26
+    public int Heal(int amount)
+    {
+        int before = CurrentHP;
         CurrentHP = Mathf.Min(MaxHP, CurrentHP + amount);
         Changed?.Invoke();
+        return CurrentHP - before;
     }
 
-    // Gain EXP, cek level up dan evolusi
-    public void GainExp(int amount)
+    // ✅ 3. PERBAIKAN: GainExp mengembalikan IEnumerable<GrowthEvent> (P5 Slide 25)
+    public IEnumerable<GrowthEvent> GainExp(int amount)
     {
         CurrentEXP += amount;
 
@@ -51,15 +66,34 @@ public class MonsterInstance : IDamageable
         {
             CurrentEXP -= ExpToNext;
             Level++;
+            
+            // Simpan data lama SEBELUM berubah, agar animasi evolusi tahu "From" dan "To"
+            MonsterData oldData = this.Data;
             CurrentHP = MaxHP;  // Full heal saat level up
-            Debug.Log($"{Data.DisplayName} naik ke Lv {Level}!");
+
+            // Yield event Level Up
+            yield return new GrowthEvent
+            {
+                Type = GrowthType.LevelUp,
+                Message = $"{oldData.DisplayName} naik ke Lv {Level}!",
+                From = oldData,
+                To = oldData
+            };
 
             // Cek evolusi
-            if (Data.EvolvesTo != null && Level >= Data.EvolveLevel)
+            if (oldData.EvolvesTo != null && Level >= oldData.EvolveLevel)
             {
-                Data = Data.EvolvesTo;
+                this.Data = oldData.EvolvesTo; // Ubah data jadi bentuk evolusi
                 CurrentHP = MaxHP;
-                Debug.Log($"{Data.DisplayName} berevolusi menjadi {Data.DisplayName}!");
+
+                // Yield event Evolve
+                yield return new GrowthEvent
+                {
+                    Type = GrowthType.Evolve,
+                    Message = $"{oldData.DisplayName} berevolusi menjadi {this.Data.DisplayName}!",
+                    From = oldData,
+                    To = this.Data
+                };
             }
         }
 

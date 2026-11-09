@@ -21,8 +21,8 @@ public class BattleView : MonoBehaviour
     [SerializeField] private Image flash;    // Drag Flash (white screen)
 
     [Header("Wipe Effects (Intro)")]
-    [SerializeField] private Image wipeTop;    // Drag WipeTop (Anchor: Top Stretch)
-    [SerializeField] private Image wipeBottom; // Drag WipeBottom (Anchor: Bottom Stretch)
+    [SerializeField] private Image wipeTop;    // : Anchor harus "Top Stretch"
+    [SerializeField] private Image wipeBottom; // : Anchor harus "Bottom Stretch"
 
     public event Action<int> Chosen;
     
@@ -74,7 +74,6 @@ public class BattleView : MonoBehaviour
         if (wipeBottom != null) wipeBottom.gameObject.SetActive(false);
     }
 
-    // ✅ ANIMASI NGEHIT PEMBUKA (P5 Slide 31: 0.48 detik)
     public void PlayIntro()
     {
         StartCoroutine(IntroRoutine());
@@ -82,41 +81,39 @@ public class BattleView : MonoBehaviour
 
     private IEnumerator IntroRoutine()
     {
-        // Pastikan objek aktif sebelum dianimasikan
+        // Pastikan objek aktif dan mulai dari posisi netral (menutupi tepi)
         if (wipeTop != null) {
             wipeTop.gameObject.SetActive(true);
-            wipeTop.rectTransform.anchoredPosition = new Vector2(0, 0); // Mulai di tepi atas
+            wipeTop.rectTransform.anchoredPosition = new Vector2(0, 0); 
         }
         if (wipeBottom != null) {
             wipeBottom.gameObject.SetActive(true);
-            wipeBottom.rectTransform.anchoredPosition = new Vector2(0, 0); // Mulai di tepi bawah
+            wipeBottom.rectTransform.anchoredPosition = new Vector2(0, 0); 
         }
 
         float duration = 0.48f;
         float elapsed = 0f;
         
-        // 1. Tutup layar (Tirai atas turun, tirai bawah naik menutupi layar)
-        // Asumsi resolusi 720p, setengahnya 360px.
+        // 1. Tutup layar (Tirai atas turun ke tengah, tirai bawah naik ke tengah)
+        // Asumsi Canvas 720p: bergerak 360 unit ke arah tengah
         while (elapsed < duration * 0.5f)
         {
             elapsed += Time.deltaTime;
             float t = elapsed / (duration * 0.5f);
             
             if (wipeTop != null) 
-                // Bergerak ke bawah (Y negatif) untuk menutupi bagian atas
                 wipeTop.rectTransform.anchoredPosition = Vector2.Lerp(new Vector2(0, 0), new Vector2(0, -360f), t);
             
             if (wipeBottom != null) 
-                // Bergerak ke atas (Y positif) untuk menutupi bagian bawah
                 wipeBottom.rectTransform.anchoredPosition = Vector2.Lerp(new Vector2(0, 0), new Vector2(0, 360f), t);
                 
             yield return null;
         }
 
-        // 2. Tahan layar hitam sebentar
+        // 2. Tahan layar hitam sebentar agar transisi scene terasa
         yield return new WaitForSeconds(0.2f);
 
-        // 3. Buka layar (Tirai atas naik, tirai bawah turun menjauh dari tengah)
+        // 3. Buka layar (Tirai atas naik keluar layar, tirai bawah turun keluar layar)
         elapsed = 0f;
         while (elapsed < duration * 0.5f)
         {
@@ -124,22 +121,19 @@ public class BattleView : MonoBehaviour
             float t = elapsed / (duration * 0.5f);
             
             if (wipeTop != null) 
-                // Terus bergerak ke atas keluar layar
                 wipeTop.rectTransform.anchoredPosition = Vector2.Lerp(new Vector2(0, -360f), new Vector2(0, -720f), t);
             
             if (wipeBottom != null) 
-                // Terus bergerak ke bawah keluar layar
                 wipeBottom.rectTransform.anchoredPosition = Vector2.Lerp(new Vector2(0, 360f), new Vector2(0, 720f), t);
                 
             yield return null;
         }
 
-        // 4. Sembunyikan kembali setelah selesai agar tidak mengganggu klik
+        // 4. Sembunyikan kembali agar tidak menghalangi klik mouse di UI
         if (wipeTop != null) wipeTop.gameObject.SetActive(false);
         if (wipeBottom != null) wipeBottom.gameObject.SetActive(false);
     }
 
-    // ✅ EFEK MENGETIK (P5 Slide 30: 55 huruf per detik)
     public void ShowMessage(string text)
     {
         if (hintText != null) hintText.enabled = false;
@@ -164,7 +158,6 @@ public class BattleView : MonoBehaviour
         }
     }
 
-    // ✅ MENAMPILKAN MENU (P5 Slide 31)
     public void ShowMenu()
     {
         if (partner == null) return;
@@ -205,7 +198,6 @@ public class BattleView : MonoBehaviour
         }
     }
 
-    // ✅ ANIMASI 3 CINCIN EMAS (P5 Slide 38)
     public void PlayEvolveRings(float duration = 2.4f)
     {
         if (rings == null || rings.Length == 0) return;
@@ -256,7 +248,6 @@ public class BattleView : MonoBehaviour
         }
     }
 
-    // ✅ KILAT PUTIH (P5 Slide 38)
     public void PlayFlash()
     {
         if (flash == null) return;
@@ -269,7 +260,7 @@ public class BattleView : MonoBehaviour
         float duration = 0.5f;
         float elapsed = 0f;
 
-        // Fade in cepat (0.3s)
+        // Fade in cepat (0.3s dari total durasi)
         while (elapsed < duration * 0.3f)
         {
             elapsed += Time.deltaTime;
@@ -278,7 +269,7 @@ public class BattleView : MonoBehaviour
             yield return null;
         }
 
-        // Fade out lebih lambat (0.7s)
+        // Fade out lebih lambat (0.7s dari total durasi)
         elapsed = 0f;
         while (elapsed < duration * 0.7f)
         {
@@ -290,5 +281,14 @@ public class BattleView : MonoBehaviour
 
         flash.color = new Color(1f, 1f, 1f, 0f);
         flash.gameObject.SetActive(false);
+    }
+
+
+    void OnDestroy()
+    {
+        if (menu != null)
+        {
+            menu.Picked -= index => Chosen?.Invoke(index);
+        }
     }
 }
