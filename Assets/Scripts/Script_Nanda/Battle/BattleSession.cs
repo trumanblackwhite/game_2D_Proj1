@@ -1,67 +1,38 @@
-using UnityEngine;
+// Kode_P6 — "surat pengantar" dari dunia ke battle: siapa lawannya, dan siapa yang dikabari hasilnya. Ditambahkan di P4.
+// Versi demo: event Ended (dunia: pindah ke desa saat kalah, ending setelah boss) dan waktu aman 2,2 detik.
 using System;
+using UnityEngine;
 
-public enum BattleResult { Win, Lose, Flee, Escape }
+public enum BattleResult { None, Win, Lose, Run }
 
 public class BattleSession
 {
-    public const float SafeSeconds = 2.2f;
+    public const float SafeSeconds = 2.2f;                    // monster liar tidak mengejar setelah battle
+
     private Action<BattleResult> onFinished;
     private float safeUntil;
 
     public MonsterInstance Enemy { get; private set; }
     public bool IsBoss { get; private set; }
     public bool IsSafe => Time.time < safeUntil;
-    public event Action<BattleResult, bool> Ended;
-    public bool Escaped { get; private set; }
-    public int Potions { get; private set; } = 3;
 
-    public void Begin(MonsterInstance enemy, bool isBoss)
+    public event Action<BattleResult, bool> Ended;           // (hasil, apakah boss)
+
+    public void Begin(MonsterInstance enemy, bool isBoss, Action<BattleResult> finished)
     {
         Enemy = enemy;
         IsBoss = isBoss;
-    }
-
-    public void SetFinishCallback(Action<BattleResult> callback)
-    {
-        onFinished = callback;
-    }
-
-    public void UseItem()
-    {
-        if (Potions > 0)
-        {
-            Potions--;
-            Debug.Log($"Potion digunakan. Sisa: {Potions}");
-        }
-        else
-        {
-            Debug.Log("Tidak ada potion tersisa!");
-        }
-    }
-
-    public void TryEscape()
-    {
-        if (IsBoss)
-        {
-            Debug.Log("Tidak bisa kabur dari boss!");
-            return;
-        }
-
-        Escaped = true;
-        Finish(BattleResult.Flee);
+        onFinished = finished;
     }
 
     public void Finish(BattleResult result)
     {
         Action<BattleResult> callback = onFinished;
         bool wasBoss = IsBoss;
-        
         onFinished = null;
         Enemy = null;
         IsBoss = false;
         safeUntil = Time.time + SafeSeconds;
-        
         callback?.Invoke(result);
         Ended?.Invoke(result, wasBoss);
     }

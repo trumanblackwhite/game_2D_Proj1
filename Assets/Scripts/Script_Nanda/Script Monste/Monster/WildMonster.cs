@@ -1,157 +1,154 @@
+// Kode_P6 — Monster liar di dunia: FSM Wander → Chase → Return, lalu memicu battle saat menyentuh pemain. Dibuat di P4, diubah di P6.
+// P6: menerima StoryFlags — boss yang sudah kalah menandai boss_defeated dan tidak muncul lagi setelah Load.
+// Versi demo: tanda "!" merah saat mengejar, tidak mengejar selama dialog / 2,2 detik setelah battle,
+// dan boss mengaum dulu lewat dialog sebelum battle dimulai.
+using System.Collections;
 using UnityEngine;
 
-[RequireComponent(typeof(Rigidbody2D))]
 public class WildMonster : MonoBehaviour
 {
-    [Header("Data")]
     [SerializeField] private MonsterData species;
-    [SerializeField] private int level = 3;
+    [SerializeField] private Vector2Int levelRange = new Vector2Int(2, 4);
     [SerializeField] private bool isBoss;
     [SerializeField] private bool stationary;
-
-    [Header("Detection")]
-    [SerializeField] private float sightRadius = 3.25f;
-    [SerializeField] private float giveUpRadius = 6.25f;
-    [SerializeField] private float wanderSpeed = 1.125f;
-    [SerializeField] private float chaseSpeed = 2.5f;
+    [SerializeField] private float wanderSpeed = 1.125f;       // 18 px/detik
+    [SerializeField] private float chaseSpeed = 2.5f;          // 40 px/detik
+    [SerializeField] private float sightRadius = 3.25f;        // 52 px
+    [SerializeField] private float giveUpRadius = 6.25f;       // 100 px
     [SerializeField] private float homeRadius = 3f;
+    [SerializeField] private float respawnSeconds = 20f;
+    [SerializeField] private Rigidbody2D rb;
+    [SerializeField] private SpriteRenderer body;
+    [SerializeField] private Collider2D hitbox;
+    [SerializeField] private GameObject alert;                 // versi demo: tanda "!"
+    [SerializeField] private string roar = "GRRRAAAH!! Raijugar menghalangi jalan, percikan listrik memenuhi gua!";
 
-    [Header("Alert")]
-    [SerializeField] private GameObject alert;
-
-    // Runtime
-    private StateMachine fsm;
-    private Rigidbody2D body;
-    private MonsterInstance instance;
-    private Vector2 homePos;
-    private Vector2 desiredVelocity;
-    private float cooldown;
-    private bool inBattle;
-
-    // Dependency (diberi oleh WorldInstaller)
     private BattleSession session;
     private SceneFlow scenes;
     private PlayerParty party;
-    private Transform target;
+    private StoryFlags flags;                                   // P6
+    private InputGate gate;                                     // versi demo: terkunci = dialog/menu
+    private DialogueRunner dialogue;                            // versi demo: auman boss
+    private StateMachine fsm;
+    private Vector2 desiredVelocity;
+    private bool inBattle;
+    private float cooldown;
 
-    // === Property untuk State ===
-    public MonsterInstance Instance => instance;
-    public Transform Target => target;
-    public Vector2 HomePos => homePos;
+    public Transform Target { get; private set; }
+    public Vector2 Home { get; private set; }
     public float WanderSpeed => wanderSpeed;
     public float ChaseSpeed => chaseSpeed;
     public float HomeRadius => homeRadius;
-    public StateMachine Fsm => fsm;
+    public bool IsBoss => isBoss;
+    public WanderState Wander { get; private set; }
+    public ChaseState Chase { get; private set; }
+    public ReturnState Return { get; private set; }
 
-    public bool Calm => cooldown > 0f || (session != null && session.IsSafe);
-
-    public bool CanSeeTarget =>
-        party != null && party.Partner != null && !Calm
-        && DistanceToTarget < sightRadius;
-
-    public bool LostTarget =>
-        Calm || DistanceToTarget > giveUpRadius;
-
-    public float DistanceToTarget =>
-        target == null ? float.MaxValue
-                       : Vector2.Distance(transform.position, target.position);
-
-    // === Dependency Injection ===
-    public void Construct(BattleSession session, SceneFlow scenes,
-                          PlayerParty party, Transform target)
+    public void Construct(BattleSession battleSession, SceneFlow sceneFlow, PlayerParty playerParty,
+                          StoryFlags storyFlags, InputGate inputGate, DialogueRunner dialogueRunner, Transform player)
     {
-        this.session = session;
-        this.scenes = scenes;
-        this.party = party;
-        this.target = target;
+        session = battleSession;
+        scenes = sceneFlow;
+        party = playerParty;
+        flags = storyFlags;
+        gate = inputGate;
+        dialogue = dialogueRunner;
+        Target = player;
+        if (isBoss && flags.Has(StoryFlags.BossDefeated)) gameObject.SetActive(false);   // P6
     }
 
-    // === Lifecycle ===
     void Awake()
     {
-        body = GetComponent<Rigidbody2D>();
-        body.gravityScale = 0;
-        body.freezeRotation = true;
-        homePos = transform.position;
-
-        instance = new MonsterInstance(species, level);
-
-        // Bangun FSM
+        Home = transform.position;
         fsm = new StateMachine();
-        var wander = new WanderState(this);
-        var chase  = new ChaseState(this);
-        var ret    = new ReturnState(this);
-
-        wander.SetTransitions(chase);
-        chase.SetTransitions(ret);
-        ret.SetTransitions(wander);
-
-        fsm.ChangeTo(stationary ? (IState)new IdleState(this, chase) : wander);
+        Wander = new WanderState(this);
+        Chase = new ChaseState(this);
+        Return = new ReturnState(this);
     }
+
+    void Start() => fsm.ChangeTo(Wander);
 
     void Update()
     {
         if (cooldown > 0f) cooldown -= Time.deltaTime;
+        if (stationary || inBattle || Target == null) desiredVelocity = Vector2.zero;
+        else fsm.Tick(Time.deltaTime);
+        if (alert != null) alert.SetActive(fsm.Current == Chase && !inBattle);
+        if (desiredVelocity.x != 0f) body.flipX = desiredVelocity.x < 0f;
+    }
 
-        if (stationary || inBattle || target == null)
+    void FixedUpdate() => rb.linearVelocity = desiredVelocity;
+
+    public void Move(Vector2 velocity) => desiredVelocity = velocity;
+    public void ChangeState(IState next) => fsm.ChangeTo(next);
+
+    public float DistanceToTarget => Vector2.Distance(transform.position, Target.position);
+    private bool Calm => cooldown > 0f || session.IsSafe || gate.IsLocked;
+    public bool CanSeeTarget => party != null && party.Partner != null && !Calm && DistanceToTarget < sightRadius;
+    public bool LostTarget => Calm || DistanceToTarget > giveUpRadius;
+
+    void OnCollisionEnter2D(Collision2D collision) => TryEncounter(collision);
+    void OnCollisionStay2D(Collision2D collision) => TryEncounter(collision);    // pemain diam menempel boss
+
+    private void TryEncounter(Collision2D collision)
+    {
+        if (collision.collider.CompareTag("Player")) StartEncounter();
+    }
+
+    private void StartEncounter()
+    {
+        if (inBattle || Calm || scenes.IsBusy || party == null || party.Partner == null) return;
+        inBattle = true;
+        int level = Random.Range(levelRange.x, levelRange.y + 1);
+        session.Begin(new MonsterInstance(species, level), isBoss, OnBattleFinished);
+        if (isBoss) StartCoroutine(BossIntro());
+        else scenes.StartBattle();
+    }
+
+    private IEnumerator BossIntro()
+    {
+        dialogue.Run(Roar());
+        yield return null;
+        while (dialogue.IsRunning) yield return null;
+        scenes.StartBattle();
+    }
+
+    private IEnumerator Roar()
+    {
+        yield return dialogue.Say("", roar);
+    }
+
+    // Dipanggil SceneFlow setelah Scn_World aktif kembali.
+    private void OnBattleFinished(BattleResult result)
+    {
+        inBattle = false;
+        if (result == BattleResult.Win)
         {
-            desiredVelocity = Vector2.zero;
+            if (isBoss) { flags.Set(StoryFlags.BossDefeated); gameObject.SetActive(false); return; }   // P6
+            StartCoroutine(Respawn());
         }
         else
         {
-            if (fsm != null)
-            fsm.Tick(Time.deltaTime);
-        }
-
-        // Tanda ! (DIPERBARUI: pakai 'is' agar lebih aman dan sesuai modul)
-        if (alert != null && fsm != null)
-        {
-            bool isChasing = fsm.Current is ChaseState;
-            alert.SetActive(isChasing && !inBattle);
+            cooldown = 2.5f;                     // beri pemain waktu menjauh
+            fsm.ChangeTo(Return);
         }
     }
 
-    void FixedUpdate()
+    private IEnumerator Respawn()
     {
-        body.linearVelocity = desiredVelocity;
-        // Flip sprite sesuai arah jalan
-        if (desiredVelocity.x != 0)
-        {
-            var sr = GetComponentInChildren<SpriteRenderer>();
-            if (sr != null) sr.flipX = desiredVelocity.x < 0;
-        }
+        SetVisible(false);
+        yield return new WaitForSeconds(respawnSeconds);
+        transform.position = Home;
+        fsm.ChangeTo(Wander);
+        SetVisible(true);
     }
 
-    // === Collision dengan Player ===
-    void OnCollisionEnter2D(Collision2D col)
+    private void SetVisible(bool visible)
     {
-        if (!col.gameObject.CompareTag("Player")) return;
-        if (inBattle || Calm) return;
-        TriggerBattle();
+        body.enabled = visible;
+        hitbox.enabled = visible;
+        desiredVelocity = Vector2.zero;
+        if (alert != null) alert.SetActive(false);
+        enabled = visible;
     }
-
-    void OnCollisionStay2D(Collision2D col)
-    {
-        if (!isBoss) return;
-        if (!col.gameObject.CompareTag("Player")) return;
-        if (inBattle || Calm) return;
-        TriggerBattle();
-    }
-
-    // === Battle ===
-    private void TriggerBattle()
-    {
-        inBattle = true;
-        session.Begin(instance, isBoss);
-        scenes.GoToBattle(() => OnBattleEnded());
-    }
-
-    private void OnBattleEnded()
-    {
-        inBattle = false;
-        cooldown = 2.5f;
-    }
-
-    // === Setter velocity dari state ===
-    public void SetVelocity(Vector2 v) => desiredVelocity = v;
 }

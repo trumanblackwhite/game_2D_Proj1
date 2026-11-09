@@ -1,17 +1,16 @@
+// Kode_P6 — Rumus damage. Static: tidak menyimpan state, mudah diuji. Ditambahkan di P5.
 using UnityEngine;
 
 public static class DamageFormula
 {
-    public static int Calculate(MonsterInstance attacker, MonsterInstance target, float power)
+    public const float CriticalChance = 0.08f;
+
+    public static int Calculate(MonsterInstance user, MonsterInstance target, int power,
+                                float multiplier, out bool critical)
     {
-        // Meleset 6%
-        if (Random.value < 0.06f) return 0;
-
-        float raw = (attacker.Attack * power) / (target.Defense * 0.5f + 10f);
-        float mult = ElementChart.Multiplier(attacker.Data.Element, target.Data.Element);
-        float crit = Random.value < 0.08f ? 1.5f : 1f;
-
-        int damage = Mathf.RoundToInt(raw * mult * crit);
-        return Mathf.Max(1, damage);
+        critical = Random.value < CriticalChance;
+        float raw = user.Attack * power / (target.Defense * 0.5f + 10f);
+        raw *= multiplier * (critical ? 1.5f : 1f) * Random.Range(0.9f, 1.1f);
+        return Mathf.Max(1, Mathf.FloorToInt(raw));
     }
 }

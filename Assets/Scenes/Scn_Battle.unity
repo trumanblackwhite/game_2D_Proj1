@@ -780,9 +780,13 @@ MonoBehaviour:
   - {fileID: 1604273189}
   - {fileID: 1291311826}
   columns: 2
+  showCursor: 1
   normal: {r: 0.92941177, g: 0.9137255, b: 0.96862745, a: 1}
   selected: {r: 1, g: 0.7764706, b: 0.101960786, a: 1}
   disabled: {r: 0.36078432, g: 0.3372549, b: 0.5019608, a: 1}
+  moveClip: {fileID: 0}
+  okClip: {fileID: 0}
+  cancelClip: {fileID: 0}
 --- !u!1 &506093792
 GameObject:
   m_ObjectHideFlags: 0
@@ -1047,12 +1051,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MonsterPanel
   body: {fileID: 1332409136}
+  faceRight: 0
   nameText: {fileID: 1479076197}
   levelText: {fileID: 1849662043}
   elementText: {fileID: 381916529}
-  hpFill: {fileID: 1805052238}
   hpText: {fileID: 1735701725}
+  hpFill: {fileID: 1805052238}
   expFill: {fileID: 1714815338}
+  lungeDistance: 0.875
+  lungeSeconds: 0.26
 --- !u!1 &1011420270
 GameObject:
   m_ObjectHideFlags: 0
@@ -1328,8 +1335,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1219419115}
   - component: {fileID: 1219419114}
-  - component: {fileID: 1219419117}
-  - component: {fileID: 1219419118}
   m_Layer: 0
   m_Name: BattleInstaller
   m_TagString: Untagged
@@ -1349,9 +1354,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 89cf742f59cf1784aa027eeafcffd450, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BattleInstaller
-  battleSystem: {fileID: 1219419117}
-  presenter: {fileID: 1219419118}
+  battle: {fileID: 0}
   view: {fileID: 1951948599}
+  battleAudio: {fileID: 0}
+  normalMusic: {fileID: 0}
+  bossMusic: {fileID: 0}
+  background: {fileID: 0}
+  forestBackground: {fileID: 0}
+  caveBackground: {fileID: 0}
 --- !u!4 &1219419115
 Transform:
   m_ObjectHideFlags: 0
@@ -1368,30 +1378,6 @@ Transform:
   - {fileID: 1849586145}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1219419117
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1219419113}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7f8bd04f90d302f41b89f1eed7e9b58c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BattleSystem
---- !u!114 &1219419118
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1219419113}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fb7b1b9f9baee3f4da7133ce15cfa074, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BattlePresenter
 --- !u!1 &1242890483
 GameObject:
   m_ObjectHideFlags: 0
@@ -2201,12 +2187,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MonsterPanel
   body: {fileID: 339171767}
+  faceRight: 0
   nameText: {fileID: 430604507}
   levelText: {fileID: 411689010}
   elementText: {fileID: 1607319792}
-  hpFill: {fileID: 1508575547}
   hpText: {fileID: 1472393616}
+  hpFill: {fileID: 1508575547}
   expFill: {fileID: 0}
+  lungeDistance: 0.875
+  lungeSeconds: 0.26
 --- !u!114 &1517131874
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3312,18 +3301,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b6620c93d3f2a314eb9a3c42005d11b2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BattleView
-  partnerPanel: {fileID: 933016201}
-  enemyPanel: {fileID: 1517131873}
   messageText: {fileID: 682584342}
   hintText: {fileID: 1086217401}
   menu: {fileID: 468951711}
-  rings:
-  - {fileID: 506093794}
-  - {fileID: 340241524}
-  - {fileID: 1944460478}
+  playerPanel: {fileID: 0}
+  enemyPanel: {fileID: 1517131873}
+  wipeTop: {fileID: 0}
+  wipeBottom: {fileID: 0}
   flash: {fileID: 1242890485}
-  wipeTop: {fileID: 427668743}
-  wipeBottom: {fileID: 1466169466}
+  rings:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  charsPerSecond: 55
 --- !u!1 &2052254685
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,9 +1,17 @@
+// Kode_P6 — Daftar semua MonsterData, dicari lewat id (dipakai Save/Load di P6). Ditambahkan di P4.
+using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "MonsterDatabase",
-                 menuName = "Pulau Monster/Monster Database")]
+[CreateAssetMenu(fileName = "MonsterDatabase", menuName = "Pulau Monster/Monster Database")]
 public class MonsterDatabase : ScriptableObject
 {
-    [SerializeField] private MonsterData[] allMonsters;
-    public MonsterData[] AllMonsters => allMonsters;
+    [SerializeField] private List<MonsterData> monsters = new List<MonsterData>();
+
+    public IReadOnlyList<MonsterData> All => monsters;
+
+    public MonsterData GetById(string id)
+    {
+        if (string.IsNullOrEmpty(id)) return null;
+        return monsters.Find(m => m.Id == id);
+    }
 }

@@ -1,3 +1,4 @@
+// Kode_P6 — Kontrol sementara sebelum UI battle selesai: tombol 1–4 memilih aksi, Console menampilkan pesan. Ditambahkan di P5.
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -5,14 +6,20 @@ public class BattleDebugInput : MonoBehaviour
 {
     [SerializeField] private BattleSystem battle;
 
+    void OnEnable() => battle.MessageShown += Log;
+    void OnDisable() => battle.MessageShown -= Log;
+
+    private static void Log(string message) => Debug.Log($"[Battle] {message}");
+
     void Update()
     {
-        if (battle == null || !battle.Busy) return;
-        var k = Keyboard.current;
-        if (k == null) return;
-        if (k.digit1Key.wasPressedThisFrame) battle.Choose(0);   // Serang
-        if (k.digit2Key.wasPressedThisFrame) battle.Choose(1);   // Jurus
-        if (k.digit3Key.wasPressedThisFrame) battle.Choose(2);   // Ramuan
-        if (k.digit4Key.wasPressedThisFrame) battle.Choose(3);   // Kabur
+        Keyboard keyboard = Keyboard.current;
+        if (keyboard == null || battle.PlayerActions == null) return;
+        if (keyboard.digit1Key.wasPressedThisFrame) Pick(0);
+        if (keyboard.digit2Key.wasPressedThisFrame) Pick(1);
+        if (keyboard.digit3Key.wasPressedThisFrame) Pick(2);
+        if (keyboard.digit4Key.wasPressedThisFrame) Pick(3);
     }
+
+    private void Pick(int index) => battle.Choose(battle.PlayerActions[index]);
 }
