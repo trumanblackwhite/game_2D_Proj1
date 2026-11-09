@@ -1,4 +1,3 @@
-// Kode_P6 — Installer Scn_World (dipulihkan: follower + hud)
 using System.Collections;
 using UnityEngine;
 
@@ -6,8 +5,8 @@ public class WorldInstaller : SceneInstaller
 {
     [SerializeField] private PlayerMovement player;
     [SerializeField] private PlayerInteractor interactor;
-    [SerializeField] private PartnerFollower follower;   // PULIH
-    [SerializeField] private PartnerHud hud;             // PULIH
+    [SerializeField] private PartnerFollower follower;   // PULIHAN
+    [SerializeField] private PartnerHud hud;             // PULIHAN
     [SerializeField] private Vector2 respawnPoint = new Vector2(21.5f, 6f);
 
     private GameServices services;
@@ -18,27 +17,34 @@ public class WorldInstaller : SceneInstaller
         s.Player = player.transform;
         player.Construct(s.Input);
         interactor.Construct(s.Input);
-        follower.Construct(s.Party, player);             // P4: partner mengikuti
-        hud.Construct(s.Party);                          // P5: bar HP + Ramuan ×N  ← COCOKKAN dengan signature Construct di PartnerHud.cs!
+        
+        // PULIHAN: Sambungkan Follower & HUD
+        if (follower != null) follower.Construct(s.Party, player);
+        if (hud != null) hud.Construct(s.Party);
 
         foreach (Npc npc in FindInScene<Npc>()) npc.Construct(s.Dialogue, s.Flags);
         foreach (StarterGiver giver in FindInScene<StarterGiver>())
             giver.ConstructStarter(s.Party, s.Toast, s.Audio);
-        foreach (MerchantNpc merchant in FindInScene<MerchantNpc>()) merchant.ConstructMerchant(s.Party, s.Audio);
-        foreach (FlagToggle toggle in FindInScene<FlagToggle>()) toggle.Construct(s.Flags);
-        foreach (SaveStone stone in FindInScene<SaveStone>()) stone.Construct(s, player.transform);
+        foreach (MerchantNpc merchant in FindInScene<MerchantNpc>()) 
+            merchant.ConstructMerchant(s.Party, s.Audio);
+        foreach (FlagToggle toggle in FindInScene<FlagToggle>()) 
+            toggle.Construct(s.Flags);
+        foreach (SaveStone stone in FindInScene<SaveStone>()) 
+            stone.Construct(s, player.transform);
         foreach (WildMonster wild in FindInScene<WildMonster>())
             wild.Construct(s.Battle, s.Scenes, s.Party, s.Flags, s.Input, s.Dialogue, player.transform);
-        foreach (AreaZone zone in FindInScene<AreaZone>()) zone.Construct(s.Audio);
+        foreach (AreaZone zone in FindInScene<AreaZone>())
+            zone.Construct(s.Audio);
+            
         s.Battle.Ended += OnBattleEnded;
 
-        if (s.Save.PendingLoad != null)
+        if (s.Save.PendingLoad != null) 
         {
             player.Teleport(s.Save.PendingLoad.playerPosition, Vector2.down);
             s.Save.PendingLoad = null;
             s.Toast.Show("Perjalanan dilanjutkan");
         }
-        else if (!s.Flags.Has(StoryFlags.IntroSeen))
+        else if (!s.Flags.Has(StoryFlags.IntroSeen)) 
         {
             s.Scenes.HoldFade = true;
             StartCoroutine(Intro());
