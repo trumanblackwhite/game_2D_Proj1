@@ -1,5 +1,4 @@
 using UnityEngine;
-using System.Collections;
 
 public class BattlePresenter : MonoBehaviour
 {
@@ -13,46 +12,72 @@ public class BattlePresenter : MonoBehaviour
         battle = b;
         view = v;
 
+        // 1. Construct View (Inisialisasi panel, reset UI)
         v.Construct(s.Battle, s.Party.Partner, s.Battle.Enemy);
 
+        // 2. Wiring Pesan (BattleSystem.Say akan memicu BattleView.ShowMessage)
         b.Said += v.ShowMessage;
-        b.ChoiceRequested += _ => v.ShowMenu();
-        v.Chosen += i => { v.HideMenu(); b.Choose(i); };
 
+        // 3. Wiring Menu Pilihan
+        b.ChoiceRequested += _ => v.ShowMenu();
+        v.Chosen += i =>
+        {
+            v.HideMenu();
+            battle.Choose(i);
+        };
+
+        // 4. Wiring Animasi Pingsan
         b.Fainted += (monster) =>
         {
-            MonsterPanel panel = (monster == s.Party.Partner) ? view.partnerPanel : view.enemyPanel;
-            if (panel != null) panel.StartCoroutine(panel.PlayFaint());
+            // Tentukan panel mana yang pingsan (Partner atau Enemy)
+            MonsterPanel panel = (monster == s.Party.Partner) ? v.partnerPanel : v.enemyPanel;
+            if (panel != null)
+            {
+                panel.StartCoroutine(panel.PlayFaint());
+            }
         };
 
-        // ✅ EVOLVING: Mainkan animasi cincin + sprite berganti, TAPI nama JANGAN diubah
         b.Evolving += (from, to) =>
         {
-            if (view.partnerPanel != null)
+            if (v.partnerPanel != null)
             {
-                // Nama tetap "Pyrit" karena displayAs = from (data lama)
-                view.partnerPanel.Show(services.Party.Partner, false, from);
-                view.partnerPanel.StartCoroutine(view.partnerPanel.PlayEvolve(from, to, 2.4f));
+                // ⭐ KRUSIAL: Paksa panel menampilkan data LAMA (from) selama animasi
+                v.partnerPanel.Show(services.Party.Partner, false, from);
+                
+                // Jalankan animasi sprite berkedip dan membesar/mengecil
+                v.partnerPanel.StartCoroutine(v.partnerPanel.PlayEvolve(from, to, 2.4f));
             }
-            if (view != null) view.PlayEvolveRings(2.4f);
+            
+            // Mainkan animasi 3 cincin emas melebar di BattleView
+            if (v != null)
+            {
+                v.PlayEvolveRings(2.4f);
+            }
         };
 
-        // ✅ EVOLVED: Baru update nama jadi "Pyrago" + kilat putih
         b.Evolved += (monster) =>
         {
-            if (view != null) view.PlayFlash();
-            if (view.partnerPanel != null)
+            // Kilat putih menutupi layar
+            if (v != null)
             {
-                // Sekarang nama berubah jadi data baru
-                view.partnerPanel.Show(monster, false, monster.Data);
+                v.PlayFlash();
+            }
+            
+            // Update panel dengan data BARU (nama berubah jadi bentuk evolusi)
+            // Parameter ke-3 (displayAs) dibiarkan null, jadi akan otomatis pakai monster.Data yang baru
+            if (v.partnerPanel != null)
+            {
+                v.partnerPanel.Show(monster, false);
             }
         };
 
+        // 7. Wiring Level Up
         b.LevelUp += (from) =>
         {
-            if (view.partnerPanel != null)
+            if (v.partnerPanel != null)
             {
-                view.partnerPanel.Show(services.Party.Partner, false, from);
+                // Refresh panel untuk update teks Level (masih pakai data yang sama)
+                v.partnerPanel.Show(services.Party.Partner, false, from);
             }
         };
     }

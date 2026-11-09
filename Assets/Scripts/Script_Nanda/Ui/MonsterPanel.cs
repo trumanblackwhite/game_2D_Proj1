@@ -14,13 +14,13 @@ public class MonsterPanel : MonoBehaviour
     [SerializeField] private Image expFill;             
 
     private MonsterInstance monster;
-    private MonsterData displayData; // ⭐ Data yang ditampilkan (belum berubah saat evolusi)
-    private bool boss;
+    private MonsterData displayData;     private bool boss;
     
     private float hpShow;                               
     private Vector3 homePosition;                       
     private bool isFainting;
     private bool isEvolving;
+
 
     public void Show(MonsterInstance m, bool isBoss = false, MonsterData displayAs = null)
     {
@@ -32,7 +32,6 @@ public class MonsterPanel : MonoBehaviour
         isEvolving = false;
         gameObject.SetActive(true); 
 
-        // ⭐ KUNCI: Nama panel tetap "Pyrit" sampai Evolved dipanggil
         displayData = displayAs ?? m.Data;
 
         if (body != null)
@@ -53,9 +52,8 @@ public class MonsterPanel : MonoBehaviour
 
     private void Refresh()
     {
-        if (monster == null) return;
+        if (monster == null || displayData == null) return;
 
-        // ⭐ Pakai displayData, bukan monster.Data (agar nama tidak berubah saat evolusi)
         nameText.text = (boss ? "★ " : "") + displayData.DisplayName;
         levelText.text = $"Lv {monster.Level}";
         
@@ -72,7 +70,6 @@ public class MonsterPanel : MonoBehaviour
     {
         if (monster == null || isFainting || isEvolving) return;
 
-        // Animasi Idle (2 frame pertama)
         if (body != null && displayData.Frames != null && displayData.Frames.Length >= 2)
         {
             int frame = Mathf.FloorToInt(Time.time / 0.35f) % 2; 
@@ -119,10 +116,9 @@ public class MonsterPanel : MonoBehaviour
         gameObject.SetActive(false); 
     }
 
-    // ✅ ANIMASI EVOLUSI SESUAI SLIDE 38
     public IEnumerator PlayEvolve(MonsterData from, MonsterData to, float duration)
     {
-        isEvolving = true;
+        isEvolving = true; // Stop animasi idle
         Transform targetTransform = body != null ? body.transform : transform;
         Vector3 startScale = targetTransform.localScale;
         Vector3 targetScale = startScale * 1.2f; 
@@ -130,7 +126,6 @@ public class MonsterPanel : MonoBehaviour
         float elapsed = 0f;
         float swapInterval = 0.15f; // Mulai lambat
         float lastSwap = 0f;
-        bool showWhite = false;
 
         // Fase 1: Membesar + sprite berganti makin cepat
         while (elapsed < duration * 0.5f)
@@ -145,26 +140,19 @@ public class MonsterPanel : MonoBehaviour
             if (elapsed - lastSwap >= swapInterval)
             {
                 lastSwap = elapsed;
-                showWhite = !showWhite;
                 
-                if (showWhite && Random.value < 0.3f)
+                // Berganti antara sprite lama (from) dan baru (to)
+                if (body != null && to != null && to.Frames != null && to.Frames.Length >= 2 && from.Frames != null && from.Frames.Length >= 2)
                 {
-                    // Sesekali putih (sesuai slide)
-                    body.color = Color.white;
-                }
-                else
-                {
-                    body.color = Color.white; // Reset
-                    // Berganti antara sprite lama dan baru
-                    body.sprite = (Random.value < 0.5f ? from : to).Frames[
-                        Mathf.FloorToInt(Time.time / 0.1f) % 2
-                    ];
+                    int frame = Mathf.FloorToInt(Time.time / 0.1f) % 2;
+                    // 50% kemungkinan tampil sprite lama, 50% sprite baru
+                    body.sprite = (Random.value < 0.5f ? from : to).Frames[frame];
                 }
             }
             yield return null;
         }
 
-        // Fase 2: Mengecil kembali
+        // Fase 2: Mengecil kembali ke normal
         elapsed = 0f;
         while (elapsed < duration * 0.5f)
         {
@@ -175,7 +163,6 @@ public class MonsterPanel : MonoBehaviour
         }
 
         targetTransform.localScale = startScale; 
-        body.color = Color.white;
-        isEvolving = false;
+        isEvolving = false; // Kembalikan animasi idle (akan pakai displayData yang baru nanti)
     }
 }

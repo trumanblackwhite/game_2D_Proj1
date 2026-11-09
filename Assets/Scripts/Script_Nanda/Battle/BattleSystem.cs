@@ -24,7 +24,7 @@ public class BattleSystem : MonoBehaviour
     public bool IsBoss => session != null && session.IsBoss;
     public BattleSession Session => session;
 
-    // Event
+    // ✅ EVENT LENGKAP (Wajib ada agar Presenter bisa memicu animasi)
     public event Action<string> Said;
     public event Action<int> ChoiceRequested;
     public event Action<MonsterInstance> Fainted;
@@ -44,23 +44,23 @@ public class BattleSystem : MonoBehaviour
     public void Choose(int index) => pendingChoice = index;
     public void Begin() => StartCoroutine(Routine());
 
+    // ✅ PERBAIKAN 1: Say jadi IEnumerator agar bisa menunggu (P5 Slide 22)
     public IEnumerator Say(string text, float hold = 0.8f)
     {
         Said?.Invoke(text);
-        float wait = hold + text.Length * 0.018f;
+        float wait = hold + text.Length * 0.018f; // 18ms per huruf
         for (float t = 0f; t < wait; t += Time.deltaTime)
         {
             yield return null;
         }
     }
 
-    // ✅ PERBAIKAN 1: EndBattle TIDAK langsung memanggil session.Finish
     private void EndBattle(BattleResult r)
     {
         if (over) return;
         over = true;
         result = r;
-        // session.Finish(r) dipanggil di akhir Ending()
+        // session.Finish(r) TIDAK dipanggil di sini, tapi di akhir Ending()
     }
 
     IEnumerator Routine()
@@ -88,9 +88,7 @@ public class BattleSystem : MonoBehaviour
             }
         }
 
-        // ✅ PERBAIKAN 2: Jalankan Ending() sampai selesai SEBELUM scene berganti
         yield return Ending();
-        
         Busy = false;
     }
 
@@ -99,7 +97,6 @@ public class BattleSystem : MonoBehaviour
         yield return Say("Pilih aksi: 1=Serang 2=Jurus 3=Ramuan 4=Kabur", 0.6f);
         ChoiceRequested?.Invoke(0);
         pendingChoice = -1;
-        
         while (pendingChoice < 0) yield return null;
 
         BattleAction action = null;
@@ -113,6 +110,7 @@ public class BattleSystem : MonoBehaviour
 
         if (action != null)
         {
+            // ✅ PERBAIKAN 2: yield return agar animasi serangan jalan
             yield return action.Execute(this, partner, enemy);
         }
 
@@ -142,8 +140,7 @@ public class BattleSystem : MonoBehaviour
     {
         if (enemy.CurrentHP <= 0)
         {
-            // ✅ PERBAIKAN 3: Invoke Fainted agar animasi pingsan jalan
-            Fainted?.Invoke(enemy); 
+            Fainted?.Invoke(enemy);
             EndBattle(BattleResult.Win);
         }
         else if (partner.CurrentHP <= 0)
@@ -153,12 +150,11 @@ public class BattleSystem : MonoBehaviour
         }
     }
 
-    // ✅ PERBAIKAN 4: Ending() sekarang lengkap dan Finish dipanggil di paling akhir
     IEnumerator Ending()
     {
         if (result == BattleResult.Win)
         {
-            // Tunggu animasi pingsan selesai (0.6 detik sesuai P5)
+            // Tunggu animasi pingsan musuh selesai dulu
             yield return new WaitForSeconds(0.6f);
 
             Victory?.Invoke();
@@ -167,6 +163,7 @@ public class BattleSystem : MonoBehaviour
             int exp = (10 + enemy.Level * 8) * (IsBoss ? 2 : 1);
             yield return Say($"{partner.Data.DisplayName} mendapat {exp} EXP.", 0.9f);
 
+            // Loop ini yang menangani Level Up dan Evolusi (misal Lv 5) secara berurutan
             foreach (GrowthEvent growth in partner.GainExp(exp))
             {
                 if (growth.Type == GrowthType.LevelUp)
@@ -176,10 +173,11 @@ public class BattleSystem : MonoBehaviour
                     continue;
                 }
 
+                // Proses Evolusi
                 yield return Say($"Apa? {growth.From.DisplayName} mulai bersinar...", 0.9f);
                 Evolving?.Invoke(growth.From, growth.To);
-                yield return new WaitForSeconds(2.4f);
-                Evolved?.Invoke(partner);
+                yield return new WaitForSeconds(2.4f);    
+                Evolved?.Invoke(partner);                 
                 yield return Say(growth.Message, 1.2f);
             }
 
@@ -198,9 +196,10 @@ public class BattleSystem : MonoBehaviour
             yield return Say($"{partner.Data.DisplayName} pingsan... kamu terbangun di desa.", 1.2f);
         }
 
-        yield return new WaitForSeconds(1f);
+        // ✅ PERBAIKAN 4: Tunggu 1.5 detik agar pemain bisa melihat hasil sebelum scene close
+        yield return new WaitForSeconds(1.5f);
 
-        // ✅ PENTING: Baru panggil Finish di sini agar scene tidak ganti sebelum EXP muncul
+        // Baru panggil Finish di paling akhir
         if (session != null)
         {
             session.Finish(result);

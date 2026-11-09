@@ -21,8 +21,8 @@ public class BattleView : MonoBehaviour
     [SerializeField] private Image flash;    // Drag Flash (white screen)
 
     [Header("Wipe Effects (Intro)")]
-    [SerializeField] private Image wipeTop;    // Drag WipeTop
-    [SerializeField] private Image wipeBottom; // Drag WipeBottom
+    [SerializeField] private Image wipeTop;    // : Anchor harus "Top Stretch"
+    [SerializeField] private Image wipeBottom; // : Anchor harus "Bottom Stretch"
 
     public event Action<int> Chosen;
     
@@ -35,22 +35,22 @@ public class BattleView : MonoBehaviour
         session = s;
         partner = partnerMon;
 
-        // Initialize panels
+        // 1. Initialize panels
         partnerPanel.Show(partnerMon, false);
         enemyPanel.Show(enemyMon, s.IsBoss);
 
-        // Setup menu
+        // 2. Setup menu
         if (menu != null)
         {
             menu.Picked += index => Chosen?.Invoke(index);
             menu.gameObject.SetActive(false);
         }
 
-        // Reset UI
+        // 3. Reset UI
         messageText.text = "";
         if (hintText != null) hintText.enabled = false;
         
-        // Reset evolution effects
+        // 4. Reset evolution effects
         if (rings != null)
         {
             foreach (var ring in rings)
@@ -69,12 +69,11 @@ public class BattleView : MonoBehaviour
             flash.color = new Color(1f, 1f, 1f, 0f);
         }
 
-        // Reset wipe effects
+        // 5. Reset wipe effects
         if (wipeTop != null) wipeTop.gameObject.SetActive(false);
         if (wipeBottom != null) wipeBottom.gameObject.SetActive(false);
     }
 
-    // ✅ ANIMASI NGEHIT PEMBUKA (P5 Slide 31: 0.48 detik)
     public void PlayIntro()
     {
         StartCoroutine(IntroRoutine());
@@ -82,42 +81,59 @@ public class BattleView : MonoBehaviour
 
     private IEnumerator IntroRoutine()
     {
-        if (wipeTop != null) wipeTop.gameObject.SetActive(true);
-        if (wipeBottom != null) wipeBottom.gameObject.SetActive(true);
+        // Pastikan objek aktif dan mulai dari posisi netral (menutupi tepi)
+        if (wipeTop != null) {
+            wipeTop.gameObject.SetActive(true);
+            wipeTop.rectTransform.anchoredPosition = new Vector2(0, 0); 
+        }
+        if (wipeBottom != null) {
+            wipeBottom.gameObject.SetActive(true);
+            wipeBottom.rectTransform.anchoredPosition = new Vector2(0, 0); 
+        }
 
         float duration = 0.48f;
         float elapsed = 0f;
         
-        // 1. Tutup layar (tirai bergerak ke tengah)
+        // 1. Tutup layar (Tirai atas turun ke tengah, tirai bawah naik ke tengah)
+        // Asumsi Canvas 720p: bergerak 360 unit ke arah tengah
         while (elapsed < duration * 0.5f)
         {
             elapsed += Time.deltaTime;
             float t = elapsed / (duration * 0.5f);
-            if (wipeTop != null) wipeTop.rectTransform.anchoredPosition = Vector2.Lerp(new Vector2(0, 0), new Vector2(0, 180), t);
-            if (wipeBottom != null) wipeBottom.rectTransform.anchoredPosition = Vector2.Lerp(new Vector2(0, 0), new Vector2(0, -180), t);
+            
+            if (wipeTop != null) 
+                wipeTop.rectTransform.anchoredPosition = Vector2.Lerp(new Vector2(0, 0), new Vector2(0, -360f), t);
+            
+            if (wipeBottom != null) 
+                wipeBottom.rectTransform.anchoredPosition = Vector2.Lerp(new Vector2(0, 0), new Vector2(0, 360f), t);
+                
             yield return null;
         }
 
-        // 2. Tahan layar hitam sebentar
+        // 2. Tahan layar hitam sebentar agar transisi scene terasa
         yield return new WaitForSeconds(0.2f);
 
-        // 3. Buka layar (tirai bergerak menjauh)
+        // 3. Buka layar (Tirai atas naik keluar layar, tirai bawah turun keluar layar)
         elapsed = 0f;
         while (elapsed < duration * 0.5f)
         {
             elapsed += Time.deltaTime;
             float t = elapsed / (duration * 0.5f);
-            if (wipeTop != null) wipeTop.rectTransform.anchoredPosition = Vector2.Lerp(new Vector2(0, 180), new Vector2(0, 360), t);
-            if (wipeBottom != null) wipeBottom.rectTransform.anchoredPosition = Vector2.Lerp(new Vector2(0, -180), new Vector2(0, -360), t);
+            
+            if (wipeTop != null) 
+                wipeTop.rectTransform.anchoredPosition = Vector2.Lerp(new Vector2(0, -360f), new Vector2(0, -720f), t);
+            
+            if (wipeBottom != null) 
+                wipeBottom.rectTransform.anchoredPosition = Vector2.Lerp(new Vector2(0, 360f), new Vector2(0, 720f), t);
+                
             yield return null;
         }
 
-        // 4. Sembunyikan kembali setelah selesai
+        // 4. Sembunyikan kembali agar tidak menghalangi klik mouse di UI
         if (wipeTop != null) wipeTop.gameObject.SetActive(false);
         if (wipeBottom != null) wipeBottom.gameObject.SetActive(false);
     }
 
-    // ✅ EFEK MENGETIK (P5 Slide 30: 55 huruf per detik)
     public void ShowMessage(string text)
     {
         if (hintText != null) hintText.enabled = false;
@@ -142,7 +158,6 @@ public class BattleView : MonoBehaviour
         }
     }
 
-    // ✅ MENAMPILKAN MENU (P5 Slide 31)
     public void ShowMenu()
     {
         if (partner == null) return;
@@ -159,10 +174,10 @@ public class BattleView : MonoBehaviour
         {
             bool[] enabledOptions = new bool[]
             {
-                true,                       // Serang
-                true,                       // Jurus
-                session.Potions > 0,        // Ramuan
-                !session.IsBoss             // Kabur
+                true,                       // 0: Serang (Selalu bisa)
+                true,                       // 1: Jurus (Selalu bisa)
+                session.Potions > 0,        // 2: Ramuan (Hanya jika > 0)
+                !session.IsBoss             // 3: Kabur (Tidak bisa jika Boss)
             };
 
             string[] options = new string[] { "Serang", "Jurus", "Ramuan", "Kabur" };
@@ -183,7 +198,6 @@ public class BattleView : MonoBehaviour
         }
     }
 
-    // ✅ ANIMASI 3 CINCIN EMAS (P5 Slide 38)
     public void PlayEvolveRings(float duration = 2.4f)
     {
         if (rings == null || rings.Length == 0) return;
@@ -197,7 +211,7 @@ public class BattleView : MonoBehaviour
             if (ring != null)
             {
                 ring.gameObject.SetActive(true);
-                ring.color = new Color(1f, 0.78f, 0.1f, 1f);
+                ring.color = new Color(1f, 0.78f, 0.1f, 1f); // Emas solid
                 ring.transform.localScale = Vector3.one * 0.5f;
             }
         }
@@ -212,24 +226,28 @@ public class BattleView : MonoBehaviour
             {
                 if (rings[i] != null)
                 {
+                    // Delay bertahap untuk efek gelombang (staggered)
                     float ringDelay = i * 0.15f;
                     float ringT = Mathf.Clamp01((t - ringDelay) / (1f - ringDelay));
                     
+                    // Scale dari 0.5x ke 3.0x
                     float scale = Mathf.Lerp(0.5f, 3f, ringT);
                     rings[i].transform.localScale = Vector3.one * scale;
+                    
+                    // Fade out alpha dari 1 ke 0
                     rings[i].color = new Color(1f, 0.78f, 0.1f, 1f - ringT);
                 }
             }
             yield return null;
         }
 
+        // Bersihkan setelah animasi selesai
         foreach (var ring in rings)
         {
             if (ring != null) ring.gameObject.SetActive(false);
         }
     }
 
-    // ✅ KILAT PUTIH (P5 Slide 38)
     public void PlayFlash()
     {
         if (flash == null) return;
@@ -242,7 +260,7 @@ public class BattleView : MonoBehaviour
         float duration = 0.5f;
         float elapsed = 0f;
 
-        // Fade in quickly (0.3s)
+        // Fade in cepat (0.3s dari total durasi)
         while (elapsed < duration * 0.3f)
         {
             elapsed += Time.deltaTime;
@@ -251,7 +269,7 @@ public class BattleView : MonoBehaviour
             yield return null;
         }
 
-        // Fade out (0.7s)
+        // Fade out lebih lambat (0.7s dari total durasi)
         elapsed = 0f;
         while (elapsed < duration * 0.7f)
         {
@@ -265,11 +283,12 @@ public class BattleView : MonoBehaviour
         flash.gameObject.SetActive(false);
     }
 
+
     void OnDestroy()
     {
         if (menu != null)
         {
-            // Cleanup if needed
+            menu.Picked -= index => Chosen?.Invoke(index);
         }
     }
 }
