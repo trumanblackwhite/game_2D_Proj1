@@ -1,3 +1,5 @@
+// Kode_P6 — Daftar pilihan berbentuk teks ("▶ Mulai baru") untuk menu battle, judul, dialog, dan menu jeda. Dibuat di P5, diubah di P6.
+// Bisa dengan keyboard (panah/WASD + E/Spasi/Enter) atau mouse (klik).
 using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -5,14 +7,15 @@ using UnityEngine.UI;
 
 public class TextMenu : MonoBehaviour
 {
-    public event Action<int> Picked;          // dunia luar mendengarkan pilihan
-    public static Action Sfx;                 // P6: dicolok ke AudioService
-
-    [SerializeField] private Text[] rows;     // baris menu (Text legacy, urut atas-bawah)
-    [SerializeField] private int columns = 1; // menu battle nanti: 2 (grid 2×2)
-    [SerializeField] private Color normal = UiTheme.Text;
-    [SerializeField] private Color selected = UiTheme.Gold;
-    [SerializeField] private Color disabled = UiTheme.Disabled;
+    [SerializeField] private Text[] rows;                 // satu Text per pilihan (masing-masing punya Button)
+    [SerializeField] private int columns = 1;             // 2 = grid 2×2 (menu battle)
+    [SerializeField] private bool showCursor = true;      // tanda ▶ di depan pilihan aktif
+    [SerializeField] private Color normal = new Color32(237, 233, 247, 255);
+    [SerializeField] private Color selected = new Color32(255, 198, 26, 255);
+    [SerializeField] private Color disabled = new Color32(92, 86, 128, 255);
+    [SerializeField] private AudioClip moveClip;
+    [SerializeField] private AudioClip okClip;
+    [SerializeField] private AudioClip cancelClip;
 
     private string[] labels = new string[0];
     private bool[] usable = new bool[0];
@@ -20,29 +23,23 @@ public class TextMenu : MonoBehaviour
     private bool acceptInput;
 
     public int Selected { get; private set; }
+    public event Action<int> Picked;
+
+    public static AudioService Sfx;                      // diisi GameBootstrap (opsional)
 
     void Awake()
     {
         for (int i = 0; i < rows.Length; i++)
         {
-            int index = i;                    // JEBAKAN: salin i sebelum lambda!
-            Text row = rows[i];
-            row.raycastTarget = true;
-
-            Button button = row.GetComponent<Button>();
-            if (button == null) button = row.gameObject.AddComponent<Button>();
-            button.transition = Selectable.Transition.None;
-            button.navigation = new Navigation { mode = Navigation.Mode.None };
-            button.onClick.AddListener(() => Click(index));
-
-            EventTrigger trigger = row.GetComponent<EventTrigger>();
-            if (trigger == null) trigger = row.gameObject.AddComponent<EventTrigger>();
-            EventTrigger.Entry entry = new EventTrigger.Entry
-            {
-                eventID = EventTriggerType.PointerEnter
-            };
-            entry.callback.AddListener(_ => Hover(index));
-            trigger.triggers.Add(entry);
+            int index = i;
+            Button b = rows[i].GetComponent<Button>();
+            if (b != null) b.onClick.AddListener(() => Click(index));
+            // Catatan: jangan memakai "??" untuk component Unity (objek yang sudah dihancurkan tidak benar-benar null).
+            var trigger = rows[i].GetComponent<EventTrigger>();
+            if (trigger == null) trigger = rows[i].gameObject.AddComponent<EventTrigger>();
+            var enter = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
+            enter.callback.AddListener(_ => Hover(index));
+            trigger.triggers.Add(enter);
         }
     }
 
@@ -52,60 +49,68 @@ public class TextMenu : MonoBehaviour
         count = Mathf.Min(options.Length, rows.Length);
         usable = enabled ?? new bool[count];
         if (enabled == null) for (int i = 0; i < count; i++) usable[i] = true;
-        for (int i = 0; i < rows.Length; i++)
-            rows[i].gameObject.SetActive(i < count);
+        for (int i = 0; i < rows.Length; i++) rows[i].gameObject.SetActive(i < count);
         Selected = Mathf.Clamp(start, 0, count - 1);
         if (!usable[Selected]) Selected = FirstUsable();
         gameObject.SetActive(true);
-        acceptInput = false;                  // telan tombol pembuka menu
+        acceptInput = false;                              // abaikan tombol yang membuka menu ini
         Redraw();
     }
 
-    public void Close() => gameObject.SetActive(false);
+    public void Close()
+    {
+        count = 0;
+        gameObject.SetActive(false);
+    }
 
     void Update()
     {
-        if (count == 0 || !gameObject.activeInHierarchy) return;
+        if (count == 0) return;
         if (!acceptInput) { acceptInput = true; return; }
-
-        if (MenuInput.Up) Move(-1, 0);
-        else if (MenuInput.Down) Move(+1, 0);
-        else if (MenuInput.Left) Move(0, -1);
-        else if (MenuInput.Right) Move(0, +1);
-
+        int rowsCount = Mathf.CeilToInt(count / (float)columns);
+        if (columns == 1)
+        {
+            if (MenuInput.Down) Move((Selected + 1) % count);
+            if (MenuInput.Up) Move((Selected + count - 1) % count);
+        }
+        else
+        {
+            int c = Selected % columns, r = Selected / columns;
+            if (MenuInput.Right && c < columns - 1) Move(Selected + 1);
+            if (MenuInput.Left && c > 0) Move(Selected - 1);
+            if (MenuInput.Down && r < rowsCount - 1) Move(Selected + columns);
+            if (MenuInput.Up && r > 0) Move(Selected - columns);
+        }
         if (MenuInput.Confirm) Pick(Selected);
     }
 
-    private void Move(int dRow, int dCol)
+    private void Move(int index)
     {
-        int rowsUsed = (count + columns - 1) / columns;
-        int row = Mathf.Clamp(Selected / columns + dRow, 0, rowsUsed - 1);
-        int col = Mathf.Clamp(Selected % columns + dCol, 0, columns - 1);
-        int next = row * columns + col;
-        if (next >= count || next == Selected) return;
-        Selected = next;
+        if (index < 0 || index >= count) return;
+        Selected = index;
+        if (Sfx != null) Sfx.PlaySfx(moveClip, 0f);
         Redraw();
-        Sfx?.Invoke();
+    }
+
+    private void Hover(int index) { if (index < count && index != Selected) Move(index); }
+
+    private void Click(int index)
+    {
+        if (index >= count || !acceptInput) return;
+        Selected = index;
+        Redraw();
+        Pick(index);
     }
 
     private void Pick(int index)
     {
-        if (!usable[index]) { Sfx?.Invoke(); return; }   // redup = tolak + bunyi batal
+        if (!usable[index])
+        {
+            if (Sfx != null) Sfx.PlaySfx(cancelClip, 0f);       // pilihan redup: tidak bisa dipilih
+            return;
+        }
+        if (Sfx != null) Sfx.PlaySfx(okClip, 0f);
         Picked?.Invoke(index);
-    }
-
-    private void Click(int index)
-    {
-        if (index >= count) return;
-        Hover(index);
-        Pick(index);
-    }
-
-    private void Hover(int index)
-    {
-        if (index >= count || index == Selected) return;
-        Selected = index;
-        Redraw();
     }
 
     private int FirstUsable()
@@ -119,7 +124,7 @@ public class TextMenu : MonoBehaviour
         for (int i = 0; i < count; i++)
         {
             bool on = i == Selected;
-            rows[i].text = (on ? "▶" : "  ") + labels[i];
+            rows[i].text = (showCursor ? (on ? "▶ " : "  ") : "") + labels[i];
             rows[i].color = !usable[i] ? disabled : on ? selected : normal;
         }
     }

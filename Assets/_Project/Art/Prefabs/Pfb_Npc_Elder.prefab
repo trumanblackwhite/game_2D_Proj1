@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 2005082009775736685}
   - component: {fileID: 7877245939762967175}
   - component: {fileID: 6916819585374458041}
-  - component: {fileID: 8704896177899697376}
+  - component: {fileID: 3530211510409099077}
   m_Layer: 10
   m_Name: Pfb_Npc_Elder
   m_TagString: Untagged
@@ -131,7 +131,7 @@ BoxCollider2D:
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 0.14, y: 0.17}
+    oldSize: {x: 0.875, y: 1.0625}
     newSize: {x: 0.14, y: 0.17}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
@@ -139,7 +139,7 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 0.0001, y: 0.0001}
   m_EdgeRadius: 0
---- !u!114 &8704896177899697376
+--- !u!114 &3530211510409099077
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -148,12 +148,21 @@ MonoBehaviour:
   m_GameObject: {fileID: 3937879702384003311}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0d1ab7b0ad5a240469ed71d54b0e1b5f, type: 3}
+  m_Script: {fileID: 11500000, guid: 185cf105c7a02c94d85509b9c5ddce1f, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Npc
+  m_EditorClassIdentifier: Assembly-CSharp::StarterGiver
   npcName: Warga
-  body: {fileID: 7877245939762967175}
-  faceDown: {fileID: 0}
-  faceLeft: {fileID: 0}
-  faceRight: {fileID: 0}
-  faceUp: {fileID: 0}
+  body: {fileID: 1592443258725271824, guid: 1092c336c194ced478109449298af1a2, type: 3}
+  faceDown: {fileID: -906093795963084720, guid: 02a16720c4ccb0240bfbdc4fac5fa256, type: 3}
+  faceLeft: {fileID: -3557547509560455942, guid: 02a16720c4ccb0240bfbdc4fac5fa256, type: 3}
+  faceRight: {fileID: 8425781311565299131, guid: 02a16720c4ccb0240bfbdc4fac5fa256, type: 3}
+  faceUp: {fileID: 6158156976392949412, guid: 02a16720c4ccb0240bfbdc4fac5fa256, type: 3}
+  dialogue: {fileID: 0}
+  dialogueAfterFlag: {fileID: 0}
+  flagKey: has_starter
+  starters:
+  - {fileID: 11400000, guid: d3168130fe6171a418d8a3d154748640, type: 2}
+  - {fileID: 11400000, guid: 29bfcd88a08f0294891191af1cc23233, type: 2}
+  - {fileID: 11400000, guid: 4b57fa34b7134ff43bde3928d05d9937, type: 2}
+  starterLevel: 3
+  receiveClip: {fileID: 8300000, guid: 5b1d731986899444a8dfab55bc2707b7, type: 3}

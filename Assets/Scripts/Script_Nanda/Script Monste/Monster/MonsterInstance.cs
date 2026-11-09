@@ -1,54 +1,40 @@
-using UnityEngine;
+// Kode_P6 — Monster yang "hidup" saat game berjalan. Ditambahkan di P4.
+// Class C# biasa (bukan MonoBehaviour), sehingga bisa dibawa dari dunia ke battle dan disimpan ke file.
 using System;
 using System.Collections.Generic;
-
-// ✅ 1. Tambahkan Enum dan Struct ini (Wajib ada di file ini)
-public enum GrowthType { LevelUp, Evolve }
-
-public struct GrowthEvent
-{
-    public GrowthType Type;
-    public string Message;
-    public MonsterData From;
-    public MonsterData To;
-}
+using UnityEngine;
 
 public class MonsterInstance : IDamageable
 {
     public MonsterData Data { get; private set; }
     public int Level { get; private set; }
+    public int Exp { get; private set; }
     public int CurrentHP { get; private set; }
-    public int CurrentEXP { get; private set; }
 
-    public event Action Changed;  // Untuk HUD di P5
+    public event Action Changed;                                  // P5: UI berlangganan
 
-    // Formula scaling
     private float Scale => 1f + (Level - 1) * 0.1f;
-
-    // Stat yang dihitung dari base + level
     public int MaxHP => Mathf.RoundToInt(Data.BaseHP * Scale) + Level * 2;
     public int Attack => Mathf.RoundToInt(Data.BaseATK * Scale);
     public int Defense => Mathf.RoundToInt(Data.BaseDEF * Scale);
     public int Speed => Mathf.RoundToInt(Data.BaseSPD * Scale);
     public int ExpToNext => Level * 10;
+    public bool IsFainted => CurrentHP <= 0;
 
-    // Constructor
-    public MonsterInstance(MonsterData data, int level)
+    public MonsterInstance(MonsterData data, int level, int exp = 0, int hp = -1)
     {
         Data = data;
-        Level = level;
-        CurrentHP = MaxHP;
-        CurrentEXP = 0;
+        Level = Mathf.Max(1, level);
+        Exp = exp;
+        CurrentHP = hp < 0 ? MaxHP : Mathf.Min(hp, MaxHP);
     }
 
-    // Interface IDamageable
     public void TakeDamage(int amount)
     {
         CurrentHP = Mathf.Max(0, CurrentHP - amount);
         Changed?.Invoke();
     }
 
-    // ✅ 2. PERBAIKAN: Heal mengembalikan int (jumlah HP yang naik) sesuai P5 Slide 26
     public int Heal(int amount)
     {
         int before = CurrentHP;
@@ -57,46 +43,27 @@ public class MonsterInstance : IDamageable
         return CurrentHP - before;
     }
 
-    // ✅ 3. PERBAIKAN: GainExp mengembalikan IEnumerable<GrowthEvent> (P5 Slide 25)
-    public IEnumerable<GrowthEvent> GainExp(int amount)
+    public void HealFull() => Heal(MaxHP);
+
+    public List<GrowthEvent> GainExp(int amount)
     {
-        CurrentEXP += amount;
-
-        while (CurrentEXP >= ExpToNext)
+        var events = new List<GrowthEvent>();
+        Exp += amount;
+        while (Exp >= ExpToNext)
         {
-            CurrentEXP -= ExpToNext;
+            Exp -= ExpToNext;
+            int oldMax = MaxHP;
             Level++;
-            
-            // Simpan data lama SEBELUM berubah, agar animasi evolusi tahu "From" dan "To"
-            MonsterData oldData = this.Data;
-            CurrentHP = MaxHP;  // Full heal saat level up
+            CurrentHP += MaxHP - oldMax;
+            events.Add(new GrowthEvent(GrowthType.LevelUp, $"{Data.DisplayName} naik ke Lv {Level}!", Data, Data));
 
-            // Yield event Level Up
-            yield return new GrowthEvent
-            {
-                Type = GrowthType.LevelUp,
-                Message = $"{oldData.DisplayName} naik ke Lv {Level}!",
-                From = oldData,
-                To = oldData
-            };
-
-            // Cek evolusi
-            if (oldData.EvolvesTo != null && Level >= oldData.EvolveLevel)
-            {
-                this.Data = oldData.EvolvesTo; // Ubah data jadi bentuk evolusi
-                CurrentHP = MaxHP;
-
-                // Yield event Evolve
-                yield return new GrowthEvent
-                {
-                    Type = GrowthType.Evolve,
-                    Message = $"{oldData.DisplayName} berevolusi menjadi {this.Data.DisplayName}!",
-                    From = oldData,
-                    To = this.Data
-                };
-            }
+            if (Data.EvolvesTo == null || Level < Data.EvolveLevel) continue;   // belum berevolusi
+            MonsterData from = Data;
+            Data = Data.EvolvesTo;
+            CurrentHP = MaxHP;
+            events.Add(new GrowthEvent(GrowthType.Evolved, $"{from.DisplayName} berevolusi menjadi {Data.DisplayName}!", from, Data));
         }
-
         Changed?.Invoke();
+        return events;
     }
 }

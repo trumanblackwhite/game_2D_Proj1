@@ -1,48 +1,112 @@
+// Kode_P6 — Mengatur perpindahan scene: Title/World (bergantian) dan Battle (di atas World). Dibuat di P4, diubah di P6.
+// P6: setelah battle, musik dunia diputar lagi.
+// Versi demo: HoldFade (layar tetap hitam untuk narasi pembuka), CurrentScene, IsBusy.
+using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using System.Collections;
 
 public class SceneFlow
 {
-    private MonoBehaviour bootstrap;
-    private ScreenFader fader;
-    private GameServices services;
+    public const string TitleScene = "Scn_Title";
+    public const string WorldScene = "Scn_World";
+    private const string BattleScene = "Scn_Battle";
 
-    public SceneFlow(MonoBehaviour bootstrap, ScreenFader fader, GameServices services)
+    private readonly MonoBehaviour runner;
+    private readonly ScreenFader fader;
+    private readonly GameServices services;
+    private string currentScene;
+    private bool busy;
+
+    public SceneFlow(MonoBehaviour runner, ScreenFader fader, GameServices services)
     {
-        this.bootstrap = bootstrap;
+        this.runner = runner;
         this.fader = fader;
         this.services = services;
     }
 
-    public void GoTo(string sceneName, System.Action onComplete = null)
+    public string CurrentScene => currentScene;
+    public bool IsBusy => busy;
+    public bool InBattle { get; private set; }
+    public bool InGame => currentScene == WorldScene;
+
+    // Diisi installer saat Install: layar dibiarkan hitam sampai ReleaseFade dipanggil.
+    public bool HoldFade { get; set; }
+
+    public void GoTo(string scene)
     {
-        bootstrap.StartCoroutine(LoadSceneAsync(sceneName, onComplete));
+        if (!busy) runner.StartCoroutine(GoToRoutine(scene));
     }
 
-    private IEnumerator LoadSceneAsync(string sceneName, System.Action onComplete)
+    public void StartBattle()
     {
-        if (fader != null) yield return bootstrap.StartCoroutine(fader.FadeOut());
+        if (!busy) runner.StartCoroutine(StartBattleRoutine());
+    }
 
-        AsyncOperation op = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Single);
-        while (!op.isDone) yield return null;
+    public void EndBattle(BattleResult result) => runner.StartCoroutine(EndBattleRoutine(result));
 
-        SceneInstaller installer = Object.FindObjectOfType<SceneInstaller>();
-        if (installer != null)
+    public IEnumerator ReleaseFade()
+    {
+        HoldFade = false;
+        yield return fader.FadeIn();
+        busy = false;
+    }
+
+    private IEnumerator GoToRoutine(string scene)
+    {
+        busy = true;
+        yield return fader.FadeOut();
+        if (!string.IsNullOrEmpty(currentScene))
+            yield return SceneManager.UnloadSceneAsync(currentScene);
+        currentScene = scene;
+        yield return LoadAndInstall(scene);
+        if (HoldFade) yield break;             // installer yang akan memanggil ReleaseFade
+        yield return fader.FadeIn();
+        busy = false;
+    }
+
+    private IEnumerator StartBattleRoutine()
+    {
+        busy = true;
+        InBattle = true;
+        services.Input.Lock();
+        yield return fader.FadeOut();
+        SetRootsActive(currentScene, false);
+        yield return LoadAndInstall(BattleScene);
+        yield return fader.FadeIn();
+    }
+
+    private IEnumerator EndBattleRoutine(BattleResult result)
+    {
+        yield return fader.FadeOut();
+        yield return SceneManager.UnloadSceneAsync(BattleScene);
+        SetRootsActive(currentScene, true);
+        SceneManager.SetActiveScene(SceneManager.GetSceneByName(currentScene));
+        InBattle = false;
+        services.Battle.Finish(result);                       // dunia sudah aktif lagi
+        if (services.Audio != null) services.Audio.ResumeWorldMusic();   // P6
+        services.Input.Unlock();
+        yield return fader.FadeIn();
+        busy = false;
+    }
+
+    private IEnumerator LoadAndInstall(string scene)
+    {
+        yield return SceneManager.LoadSceneAsync(scene, LoadSceneMode.Additive);
+        Scene loaded = SceneManager.GetSceneByName(scene);
+        SceneManager.SetActiveScene(loaded);
+        foreach (GameObject root in loaded.GetRootGameObjects())
         {
-            installer.Install(services);
+            if (root.TryGetComponent(out SceneInstaller installer))
+            {
+                installer.Install(services);
+                break;
+            }
         }
-
-        if (fader != null) yield return bootstrap.StartCoroutine(fader.FadeIn());
-        onComplete?.Invoke();
     }
 
-    public void GoToBattle(System.Action onBattleEnded)
+    private static void SetRootsActive(string scene, bool active)
     {
-        services.Battle.SetFinishCallback(result =>
-        {
-            GoTo("Scn_World", onBattleEnded);
-        });
-        GoTo("Scn_Battle");
+        foreach (GameObject root in SceneManager.GetSceneByName(scene).GetRootGameObjects())
+            root.SetActive(active);
     }
 }
